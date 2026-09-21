@@ -99,8 +99,36 @@ button,.btn{
  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 </style>
+
+<style>
+.splash{position:fixed;inset:0;z-index:9999;overflow:hidden;background:#050711;display:flex;align-items:center;justify-content:center;animation:splashOut .7s ease 4.3s forwards}
+.splash-content{position:relative;z-index:4;text-align:center;animation:logoIn 1.2s cubic-bezier(.2,.8,.2,1) both}
+.mask-mark{width:86px;height:86px;margin:auto auto 16px;border-radius:28px;display:grid;place-items:center;font-size:44px;font-weight:900;color:#fff;background:linear-gradient(135deg,#ef4444,#7c3aed 52%,#2563eb);box-shadow:0 0 50px rgba(239,68,68,.35),0 0 80px rgba(37,99,235,.25);transform:rotate(-8deg)}
+.splash-title{font-size:clamp(48px,13vw,92px);font-weight:900;letter-spacing:-4px;color:#fff}.splash-title span,.watch-brand span{color:#ef4444}.splash-sub{margin-top:10px;color:#aab5ca;letter-spacing:5px;font-size:12px}
+.hero-orb{position:absolute;border-radius:50%;filter:blur(45px);opacity:.6}.orb-red{width:45vw;height:45vw;background:#ef233c;left:-18vw;top:-20vw;animation:orb 4s ease-in-out infinite alternate}.orb-blue{width:50vw;height:50vw;background:#2563eb;right:-20vw;bottom:-25vw;animation:orb 4s ease-in-out 1s infinite alternate}
+.web-lines{position:absolute;inset:-20%;opacity:.16;background:radial-gradient(circle at 50% 50%,transparent 0 13%,#fff 13.2% 13.35%,transparent 13.6% 25%,#fff 25.2% 25.35%,transparent 25.6% 38%,#fff 38.2% 38.35%,transparent 38.6%),repeating-conic-gradient(from 0deg at 50% 50%,transparent 0 10deg,rgba(255,255,255,.5) 10.5deg 11deg,transparent 11.5deg 20deg);animation:spinWeb 16s linear infinite}
+.app-hidden{opacity:0}.app-visible{opacity:1;transition:opacity .5s}
+.watch-page{position:fixed;inset:0;z-index:5000;background:radial-gradient(circle at 80% 0%,rgba(37,99,235,.2),transparent 35%),radial-gradient(circle at 15% 10%,rgba(239,68,68,.16),transparent 30%),#050711;overflow:auto;display:none;padding:18px}.watch-page.show{display:block}
+.watch-top{max-width:1100px;margin:auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}.watch-top .secondary{justify-self:start}.watch-brand{font-size:24px;font-weight:900;text-align:center}.quality-pill,.quality-badge{justify-self:end;padding:7px 11px;border-radius:999px;background:#111827;border:1px solid rgba(255,255,255,.1);font-size:11px;font-weight:800;color:#cbd5e1}
+.watch-loading,.watch-ready{max-width:1000px;margin:10vh auto 0;text-align:center}.watch-ready{display:none;text-align:left;margin-top:7vh}
+.energy-ring{width:150px;height:150px;margin:0 auto 28px;border-radius:50%;display:grid;place-items:center;font-size:48px;font-weight:900;color:#fff;background:conic-gradient(#ef4444,#7c3aed,#2563eb,#ef4444);box-shadow:0 0 50px rgba(124,58,237,.3);position:relative;animation:ringPulse 1.5s ease-in-out infinite}.energy-ring:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#080b15}.energy-ring span{position:relative;z-index:2}
+.watch-loading h2{font-size:27px}.watch-loading p{color:#94a3b8;margin:8px 0 20px}.loading-bar{height:7px;max-width:460px;margin:auto;background:#111827;border-radius:20px;overflow:hidden}.loading-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ef4444,#7c3aed,#2563eb);transition:width 1s linear}
+.watch-title-row{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:14px}.watch-title-row h1{font-size:clamp(24px,4vw,38px);margin-top:5px}.eyebrow{font-size:10px;letter-spacing:3px;color:#60a5fa;font-weight:900}
+.player{aspect-ratio:16/9;background:#000;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 70px rgba(0,0,0,.55)}.player iframe,.player video{width:100%;height:100%;border:0}.player-note{color:#94a3b8;padding:13px 2px;font-size:13px;line-height:1.5}
+@keyframes logoIn{0%{opacity:0;transform:scale(.65) translateY(20px);filter:blur(12px)}100%{opacity:1;transform:none;filter:none}}@keyframes splashOut{to{opacity:0;visibility:hidden}}@keyframes orb{to{transform:scale(1.25) translate(5%,5%)}}@keyframes spinWeb{to{transform:rotate(360deg)}}@keyframes ringPulse{50%{transform:scale(1.04);box-shadow:0 0 75px rgba(239,68,68,.35)}}
+@media(max-width:600px){.watch-top{grid-template-columns:1fr auto}.watch-brand{grid-column:1/-1;grid-row:1;justify-self:center}.watch-top .secondary{grid-column:1;grid-row:2}.quality-pill{grid-column:2;grid-row:2}}
+</style>
 </head>
 <body>
+<div id="splash" class="splash">
+  <div class="web-lines"></div><div class="hero-orb orb-red"></div><div class="hero-orb orb-blue"></div>
+  <div class="splash-content">
+    <div class="mask-mark">◈</div>
+    <div class="splash-title">Cine<span>Rush</span></div>
+    <div class="splash-sub">WATCH • STREAM • ENJOY</div>
+  </div>
+</div>
+<div id="app" class="app-hidden">
 <div class="container">
   <header class="header">
     <div class="logo">🎬 <span>Jugadu Baba</span> Movies</div>
@@ -129,6 +157,14 @@ button,.btn{
         <option value="iframe">Other iframe-compatible site</option>
       </select>
       <input id="url" class="full" placeholder="Video URL">
+      <select id="quality">
+        <option value="Auto">Auto</option>
+        <option value="360p">360p</option>
+        <option value="480p">480p</option>
+        <option value="720p">720p HD</option>
+        <option value="1080p">1080p Full HD</option>
+        <option value="4K">4K Ultra HD</option>
+      </select>
       <button onclick="addMovie()">➕ Add Title</button>
       <button class="secondary" onclick="resetMovies()">Reset Demo Data</button>
     </div>
@@ -140,116 +176,35 @@ button,.btn{
   </section>
 </div>
 
-<div id="modal" class="modal" onclick="closeOnBackdrop(event)">
-  <div class="player-card">
-    <div class="player-head">
-      <h2 id="playerTitle">Video</h2>
-      <button class="close" onclick="closePlayer()">✕</button>
+
+</div>
+</div>
+<div id="watchPage" class="watch-page">
+  <div class="watch-top">
+    <button class="secondary" onclick="closeWatchPage()">← Back</button>
+    <div class="watch-brand">Cine<span>Rush</span></div>
+    <div class="quality-pill" id="watchQuality">AUTO</div>
+  </div>
+  <div id="watchLoading" class="watch-loading">
+    <div class="energy-ring"><span id="countdown">20</span></div>
+    <h2>Preparing your stream</h2>
+    <p>20-second cinematic loading animation</p>
+    <div class="loading-bar"><i id="loadingProgress"></i></div>
+  </div>
+  <div id="watchReady" class="watch-ready">
+    <div class="watch-title-row">
+      <div><div class="eyebrow">NOW PLAYING</div><h1 id="playerTitle">Video</h1></div>
+      <span id="playerQuality" class="quality-badge">AUTO</span>
     </div>
     <div id="player" class="player"></div>
     <div id="playerNote" class="player-note"></div>
   </div>
 </div>
-
 <script>
-const DEMO = [
-  {id:1,title:"Demo Video 1",type:"youtube",url:"https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
-  {id:2,title:"Demo Direct Video",type:"direct",url:"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"}
-];
-
-let movies = JSON.parse(localStorage.getItem("jb_movies") || "null") || DEMO;
-
-function save(){localStorage.setItem("jb_movies",JSON.stringify(movies));}
-
-function renderMovies(){
-  const q=document.getElementById("search").value.toLowerCase().trim();
-  const grid=document.getElementById("movieGrid");
-  const list=movies.filter(m=>m.title.toLowerCase().includes(q));
-  if(!list.length){grid.innerHTML='<div class="empty">Koi title nahi mila.</div>';return;}
-  grid.innerHTML=list.map(m=>`
-    <article class="movie">
-      <div>
-        <div class="poster">🎬</div>
-        <h3>${escapeHtml(m.title)}</h3>
-        <small>${m.type.toUpperCase()}</small>
-      </div>
-      <button onclick="openPlayer(${m.id})">▶ Watch Online</button>
-    </article>`).join("");
-}
-
-function openPlayer(id){
-  const m=movies.find(x=>x.id===id); if(!m)return;
-  document.getElementById("playerTitle").textContent=m.title;
-  const box=document.getElementById("player");
-  const note=document.getElementById("playerNote");
-  box.innerHTML=""; note.textContent="Loading video…";
-
-  if(m.type==="youtube"){
-    const id=getYouTubeId(m.url);
-    if(!id){note.textContent="Invalid YouTube URL.";return;}
-    box.innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
-    note.textContent="YouTube video player";
-  } else if(m.type==="dropbox"){
-    let u=m.url.replace("?dl=0","?raw=1").replace("?dl=1","?raw=1");
-    if(!u.includes("raw=1")) u+=(u.includes("?")?"&":"?")+"raw=1";
-    box.innerHTML=`<video src="${escapeAttr(u)}" controls autoplay playsinline></video>`;
-    note.textContent="Dropbox raw video playback. If the link does not allow browser playback, use a direct video file link.";
-  } else if(m.type==="direct"){
-    box.innerHTML=`<video src="${escapeAttr(m.url)}" controls autoplay playsinline></video>`;
-    note.textContent="Direct video URL";
-  } else {
-    box.innerHTML=`<iframe src="${escapeAttr(m.url)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
-    note.innerHTML=`External player. If the source blocks embedding, <a class="btn secondary" style="margin-left:8px;padding:7px 10px" target="_blank" rel="noopener" href="${escapeAttr(m.url)}">Open Source</a>`;
-  }
-  document.getElementById("modal").classList.add("show");
-}
-
-function closePlayer(){
-  document.getElementById("modal").classList.remove("show");
-  document.getElementById("player").innerHTML="";
-}
-function closeOnBackdrop(e){if(e.target.id==="modal")closePlayer();}
-
-function getYouTubeId(url){
-  try{
-    const u=new URL(url);
-    if(u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("/")[0];
-    if(u.hostname.includes("youtube.com")) return u.searchParams.get("v") || u.pathname.split("/").pop();
-  }catch(e){}
-  return null;
-}
-
-function addMovie(){
-  const title=document.getElementById("title").value.trim();
-  const type=document.getElementById("type").value;
-  const url=document.getElementById("url").value.trim();
-  if(!title||!url){alert("Title aur video URL dono bharo.");return;}
-  movies.unshift({id:Date.now(),title,type,url});
-  save(); renderMovies(); renderAdmin();
-  document.getElementById("title").value="";
-  document.getElementById("url").value="";
-}
-
-function removeMovie(id){
-  movies=movies.filter(m=>m.id!==id);save();renderMovies();renderAdmin();
-}
-
-function renderAdmin(){
-  document.getElementById("adminList").innerHTML=movies.map(m=>`
-    <div class="item-row">
-      <div><b>${escapeHtml(m.title)}</b><br><small style="color:#94a3b8">${m.type}</small></div>
-      <button class="delete" onclick="removeMovie(${m.id})">Delete</button>
-    </div>`).join("");
-}
-function toggleAdmin(){
-  const a=document.getElementById("admin");
-  a.classList.toggle("show"); if(a.classList.contains("show"))renderAdmin();
-}
-function resetMovies(){movies=DEMO;save();renderMovies();renderAdmin();}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
-function escapeAttr(s){return escapeHtml(s);}
-
-renderMovies();
+setTimeout(function(){
+  var splash=document.getElementById("splash"), app=document.getElementById("app");
+  if(splash)splash.remove(); if(app)app.classList.add("app-visible");
+},5000);
 </script>
 </body>
 </html>
