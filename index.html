@@ -1,744 +1,153 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050505">
-<title>CineRush</title>
-
-<!-- Firebase: ONLY data source for this index -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-
+<title>CineRush — Movie Streaming</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#050505;
-  --card:#101010;
-  --card2:#151515;
-  --text:#f7f7f7;
-  --muted:#85858d;
-  --red:#ff151d;
-  --red2:#ff3038;
-  --line:rgba(255,255,255,.12);
-}
-html{background:#050505;scroll-behavior:smooth}
-body{
-  margin:0;background:#050505;color:var(--text);
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
-  min-height:100vh;overflow-x:hidden;
-}
-button,input{font:inherit}
-button{cursor:pointer}
-img{display:block;max-width:100%}
-.hidden{display:none!important}
-
-/* ---------- INTRO ---------- */
-#intro{
-  position:fixed;inset:0;z-index:99999;background:#050505;
-  display:grid;place-items:center;overflow:hidden;
-  transition:opacity .7s,visibility .7s;
-}
-#intro.hide{opacity:0;visibility:hidden}
-.introGlow{
-  position:absolute;width:55vw;height:55vw;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,20,28,.28),transparent 68%);
-  filter:blur(20px);animation:introPulse 2s infinite alternate;
-}
-.introLogo{
-  position:relative;text-align:center;animation:introIn 1s cubic-bezier(.2,.8,.2,1);
-}
-.introIcon{
-  width:78px;height:78px;border-radius:24px;margin:0 auto 17px;
-  display:grid;place-items:center;background:linear-gradient(145deg,#ff1119,#a50007);
-  box-shadow:0 0 55px rgba(255,20,28,.42);font-size:36px;
-}
-.introLogo h1{font-size:52px;line-height:1;font-weight:900;letter-spacing:-3px}
-.introLogo h1 span{color:var(--red)}
-.introLogo p{margin-top:10px;color:#777;font-size:10px;letter-spacing:5px}
-@keyframes introIn{from{opacity:0;transform:scale(.7);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
-@keyframes introPulse{to{transform:scale(1.15);opacity:.7}}
-
-/* ---------- APP ---------- */
-#app{max-width:700px;margin:auto;padding:0 0 110px}
-.page{display:none;min-height:100vh}
-.page.active{display:block}
-.container{padding:25px 28px 0}
-
-/* ---------- TOP ---------- */
-.top{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:14px;margin-bottom:25px;
-}
-.titleBlock h1{font-size:27px;line-height:1.08;font-weight:850;letter-spacing:-.7px}
-.titleBlock p{color:#777;font-size:14px;margin-top:9px}
-.backBtn,.iconBtn{
-  width:44px;height:44px;border-radius:50%;border:1px solid var(--line);
-  background:#101010;color:#fff;display:grid;place-items:center;
-  font-size:21px;flex:none;
-}
-.iconBtn.active{background:var(--red);border-color:var(--red)}
-
-/* ---------- GENRE ---------- */
-.genreRow{
-  display:flex;gap:20px;overflow-x:auto;padding:2px 0 8px;
-  scrollbar-width:none;margin-bottom:39px;
-}
-.genreRow::-webkit-scrollbar{display:none}
-.genre{
-  flex:0 0 282px;height:168px;border-radius:25px;padding:27px 27px;
-  position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.10);
-}
-.genre:after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(120deg,transparent 35%,rgba(255,255,255,.04));
-}
-.genre.red{background:linear-gradient(135deg,#33080d,#15080a)}
-.genre.blue{background:linear-gradient(135deg,#062c3d,#07121b)}
-.genre.purple{background:linear-gradient(135deg,#29134d,#130b1f)}
-.genreIcon{
-  width:43px;height:43px;border-radius:13px;display:grid;place-items:center;
-  margin-bottom:28px;font-size:21px;background:rgba(255,255,255,.09);
-}
-.genre h3{font-size:22px;position:relative;z-index:2}
-.genreArrow{position:absolute;right:25px;bottom:28px;font-size:34px;color:#a7a7aa;z-index:2}
-
-/* ---------- SECTION ---------- */
-.section{margin-bottom:38px}
-.sectionHead{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:21px;gap:10px
-}
-.sectionHead h2{font-size:26px;font-weight:850;letter-spacing:-.7px}
-.sectionHead .more{font-size:35px;color:#a4a4aa;line-height:1}
-
-/* ---------- MOVIE CAROUSEL ---------- */
-.movieRow{
-  display:flex;gap:21px;overflow-x:auto;padding-bottom:8px;
-  scrollbar-width:none;margin-right:-28px;
-}
-.movieRow::-webkit-scrollbar{display:none}
-.movieCard{flex:0 0 257px;min-width:257px}
-.posterWrap{
-  height:388px;border-radius:27px;overflow:hidden;background:#121212;
-  border:1px solid rgba(255,255,255,.14);position:relative;
-  box-shadow:0 18px 35px rgba(0,0,0,.25);
-}
-.posterWrap img{width:100%;height:100%;object-fit:cover}
-.posterFallback{
-  width:100%;height:100%;display:grid;place-items:center;
-  font-size:60px;background:linear-gradient(145deg,#27070a,#161616)
-}
-.rating{
-  position:absolute;right:14px;top:14px;z-index:3;
-  padding:7px 10px;border-radius:14px;background:rgba(4,4,4,.84);
-  font-weight:800;font-size:16px;backdrop-filter:blur(8px);
-}
-.rating span{color:#ff1b24;margin-right:5px}
-.movieName{
-  margin:17px 7px 0;font-size:19px;font-weight:750;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.movieDate{margin:8px 7px 0;color:#96969d;font-size:16px}
-
-/* ---------- TV ---------- */
-.tv .posterWrap{
-  height:388px;
-}
-
-/* ---------- SEARCH ---------- */
-.searchBox{
-  width:100%;height:55px;border-radius:18px;border:1px solid var(--line);
-  background:#111;color:#fff;padding:0 18px;outline:none;margin:8px 0 24px;
-}
-.searchBox:focus{border-color:rgba(255,21,29,.65)}
-.searchResults{display:grid;grid-template-columns:1fr 1fr;gap:17px}
-.searchResults .movieCard{min-width:0;flex:auto}
-.searchResults .posterWrap{height:310px}
-
-/* ---------- WATCHLIST ---------- */
-.empty{
-  text-align:center;color:#73737a;padding:100px 20px;
-}
-.empty .eicon{font-size:52px;margin-bottom:16px}
-
-/* ---------- DETAIL / WATCH ---------- */
-#detailPage{background:#050505}
-.detailTop{
-  display:flex;align-items:center;gap:12px;padding:18px 28px 12px;
-  position:sticky;top:0;background:rgba(5,5,5,.90);backdrop-filter:blur(14px);
-  z-index:20;
-}
-.breadcrumb{
-  flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  color:#777;font-size:12px;text-transform:uppercase;letter-spacing:1.4px;
-}
-.breadcrumb b{color:#eee}
-.closeBtn{
-  width:44px;height:44px;border:1px solid var(--line);border-radius:50%;
-  background:#111;color:#aaa;font-size:27px;display:grid;place-items:center
-}
-.detailBody{padding:0 28px 120px}
-.detailTitle{
-  font-size:23px;font-weight:500;margin:4px 0 5px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-.detailMeta{font-size:15px;color:#a1a1a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.player{
-  margin-top:14px;width:100%;aspect-ratio:16/9;background:#090909;
-  border-radius:3px;overflow:hidden;position:relative;
-}
-.player video,.player iframe{width:100%;height:100%;border:0;display:block}
-.player video{background:#000}
-.playerEmpty{height:100%;display:grid;place-items:center;color:#777;text-align:center;padding:25px}
-.playerEmpty b{display:block;color:#fff;margin-bottom:8px}
-.playerTools{
-  position:absolute;right:9px;top:9px;display:flex;gap:8px;z-index:5
-}
-.playerTools button{
-  width:45px;height:45px;border-radius:12px;background:rgba(5,5,5,.82);
-  color:#fff;border:1px solid rgba(255,255,255,.12);font-size:19px
-}
-.description{color:#9a9aa1;line-height:1.65;font-size:14px;margin-top:18px}
-.watchActions{display:flex;gap:10px;margin-top:16px}
-.watchActions button{
-  flex:1;padding:13px;border-radius:13px;border:1px solid var(--line);
-  background:#111;color:#fff;font-weight:700
-}
-.watchActions button.primary{background:var(--red);border-color:var(--red)}
-
-/* ---------- LOADING ---------- */
-.loading{
-  min-height:180px;display:grid;place-items:center;color:#777;
-}
-.spinner{
-  width:38px;height:38px;border:3px solid #242424;border-top-color:var(--red);
-  border-radius:50%;animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ---------- BOTTOM NAV ---------- */
-.bottomNav{
-  position:fixed;z-index:50;left:50%;bottom:12px;transform:translateX(-50%);
-  width:min(644px,calc(100% - 42px));height:82px;padding:7px;
-  border-radius:29px;border:1px solid rgba(255,255,255,.16);
-  background:rgba(7,7,7,.91);backdrop-filter:blur(20px);
-  display:grid;grid-template-columns:repeat(3,1fr);
-  box-shadow:0 15px 55px rgba(0,0,0,.55);
-}
-.navBtn{
-  border:0;background:transparent;color:#70717a;border-radius:23px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
-  font-size:13px
-}
-.navBtn .navIcon{font-size:25px;line-height:1}
-.navBtn.active{background:var(--red);color:#080808}
-.navBtn.active .navIcon{filter:brightness(.15)}
-
-/* ---------- FILTERS ---------- */
-.filterRow{
-  display:flex;gap:9px;overflow:auto;scrollbar-width:none;margin-bottom:22px
-}
-.filterRow::-webkit-scrollbar{display:none}
-.filter{
-  flex:none;border:1px solid var(--line);background:#101010;color:#aaa;
-  padding:10px 14px;border-radius:99px;font-size:13px
-}
-.filter.active{background:var(--red);color:#fff;border-color:var(--red)}
-
-/* ---------- DESKTOP ---------- */
-@media(min-width:800px){
-  #app{max-width:1100px}
-  .container{padding-left:30px;padding-right:30px}
-  .movieCard{flex-basis:257px}
-}
-@media(max-width:480px){
-  .container{padding-left:28px;padding-right:28px}
-  .titleBlock h1{font-size:26px}
-  .genre{flex-basis:282px}
-  .movieCard{flex-basis:257px}
-  .posterWrap{height:388px}
-}
+:root{--bg:#050505;--card:#101010;--card2:#171717;--red:#ff1744;--blue:#287cff;--text:#fff;--muted:#929292;--line:#242424}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}
+body{padding-bottom:78px}.app{max-width:560px;margin:auto;min-height:100vh}
+header{position:sticky;top:0;z-index:20;background:rgba(5,5,5,.9);backdrop-filter:blur(16px);border-bottom:1px solid #171717;padding:14px 16px}
+.top{display:flex;align-items:center;justify-content:space-between}.brand{font-size:24px;font-weight:900;letter-spacing:-1px}.brand b{color:var(--red)}
+.iconbtn{border:0;background:#151515;color:#fff;width:40px;height:40px;border-radius:13px;font-size:18px}
+main{padding:18px 14px}.hero{background:linear-gradient(135deg,#171717,#080808);border:1px solid #262626;border-radius:24px;padding:20px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;width:180px;height:180px;background:var(--red);filter:blur(80px);opacity:.18;right:-60px;top:-60px}.eyebrow{color:#ff6a87;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px}.hero h1{font-size:30px;line-height:1.02;margin:8px 0}.hero p{color:#aaa;line-height:1.5;font-size:13px;margin:8px 0 16px}
+.btn{border:0;border-radius:13px;padding:12px 16px;font-weight:800;color:white;background:var(--red);cursor:pointer}.btn.alt{background:#202020}.section{margin-top:25px}.sectionhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.section h2{font-size:18px;margin:0}.see{font-size:12px;color:#888}
+.genres{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.genre{border:1px solid #292929;border-radius:17px;padding:15px;background:linear-gradient(135deg,#191919,#0b0b0b);min-height:86px;cursor:pointer}.genre:nth-child(3n){background:linear-gradient(135deg,#151c2b,#0b0b0b)}.genre strong{display:block;font-size:15px}.genre span{font-size:12px;color:#888}
+.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:5px;scrollbar-width:none}.row::-webkit-scrollbar{display:none}.poster{min-width:128px;width:128px;border-radius:15px;overflow:hidden;background:#121212;border:1px solid #262626;cursor:pointer}.poster img{display:block;width:100%;height:184px;object-fit:cover;background:#181818}.poster .info{padding:9px}.poster b{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.meta{font-size:10px;color:#888;margin-top:4px}
+.empty{padding:28px;text-align:center;color:#777;border:1px dashed #292929;border-radius:18px}.page{display:none}.page.active{display:block}
+.searchbox{display:flex;gap:8px;margin-bottom:16px}.searchbox input,.admin input,.admin textarea{width:100%;background:#111;color:#fff;border:1px solid #2a2a2a;border-radius:12px;padding:13px;outline:none}.searchbox input:focus,.admin input:focus,.admin textarea:focus{border-color:var(--red)}
+.detail .back{margin-bottom:14px}.back{color:#aaa;cursor:pointer;font-size:13px}.detailPoster{width:100%;max-height:430px;object-fit:cover;border-radius:20px;border:1px solid #282828}.detail h1{font-size:27px;margin:14px 0 5px}.detail .desc{color:#aaa;line-height:1.6;font-size:13px}.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.chip{background:#191919;border:1px solid #292929;border-radius:99px;padding:6px 9px;color:#aaa;font-size:11px}
+.player{background:#000;border-radius:18px;overflow:hidden;border:1px solid #292929;margin:12px 0}.player video{width:100%;display:block;max-height:430px}.player iframe{width:100%;height:300px;border:0}.scan{padding:22px;text-align:center}.scan .orb{width:54px;height:54px;border:2px solid var(--red);border-top-color:transparent;border-radius:50%;margin:0 auto 12px;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.status{font-size:12px;color:#aaa}
+.tgbox{background:#0b0b0b;border:1px solid #292929;border-radius:18px;padding:10px;overflow:hidden}.tginput{display:flex;gap:8px;margin-bottom:10px}.tginput input{flex:1;min-width:0;background:#151515;color:white;border:1px solid #2b2b2b;border-radius:12px;padding:11px}.tginput button{background:var(--red);color:white;border:0;border-radius:12px;padding:0 14px;font-weight:800}.widget{min-height:80px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);z-index:50;background:rgba(12,12,12,.95);backdrop-filter:blur(16px);border-top:1px solid #252525;display:grid;grid-template-columns:repeat(3,1fr);padding:8px 10px max(8px,env(safe-area-inset-bottom))}
+nav button{background:none;border:0;color:#777;padding:8px;font-size:11px;font-weight:700}nav button.active{color:#fff}nav span{display:block;font-size:19px;margin-bottom:2px}
+.admin{background:#0c0c0c;border:1px solid #282828;border-radius:18px;padding:15px}.admin textarea{min-height:90px;resize:vertical}.admin .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.admin button{margin-top:8px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#fff;color:#000;padding:10px 14px;border-radius:12px;font-size:12px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;z-index:100}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:600px){body{background:#020202}.app{border-left:1px solid #171717;border-right:1px solid #171717}}
 </style>
 </head>
-
 <body>
+<div class="app">
+<header><div class="top"><div class="brand">Cine<b>Rush</b></div><button class="iconbtn" onclick="showPage('search')">⌕</button></div></header>
 
-<!-- Intro -->
-<div id="intro">
-  <div class="introGlow"></div>
-  <div class="introLogo">
-    <div class="introIcon">🎬</div>
-    <h1>Cine<span>Rush</span></h1>
-    <p>WATCH • STREAM • ENJOY</p>
-  </div>
+<main>
+<section id="home" class="page active">
+<div class="hero"><div class="eyebrow">Stream your collection</div><h1>Movies. Shows.<br>One place.</h1><p>Fast mobile interface with Firebase-powered catalog and Telegram post playback.</p><button class="btn" onclick="showPage('search')">Explore Now →</button></div>
+
+<div class="section"><div class="sectionhead"><h2>Browse Genres</h2><span class="see">All genres</span></div><div id="genres" class="genres"></div></div>
+<div class="section"><div class="sectionhead"><h2>🔥 Top Movies</h2><span class="see" id="movieCount"></span></div><div id="movies" class="row"></div></div>
+<div class="section"><div class="sectionhead"><h2>📺 Trending TV Shows</h2><span class="see" id="tvCount"></span></div><div id="tv" class="row"></div></div>
+
+<div class="section">
+<div class="sectionhead"><h2>▶ Telegram Player</h2><span class="see">Public posts</span></div>
+<div class="tgbox"><div class="tginput"><input id="tgUrl" value="https://t.me/mycinehub0/17" placeholder="Paste public Telegram post link"><button onclick="loadTelegram()">PLAY</button></div><div id="tgWidget" class="widget"><div class="empty">Paste a public <b>t.me/channel/message</b> link and press PLAY.</div></div></div>
+</div>
+</section>
+
+<section id="search" class="page"><div class="sectionhead"><h2>Search</h2></div><div class="searchbox"><input id="q" placeholder="Search movies & shows..." oninput="renderSearch()"></div><div id="results" class="row" style="flex-wrap:wrap;overflow:visible"></div></section>
+
+<section id="watchlist" class="page"><div class="sectionhead"><h2>❤️ WatchList</h2></div><div id="watchlistItems"></div></section>
+
+<section id="detail" class="page"><div class="back" onclick="showPage('home')">← Back</div><div id="detailContent"></div></section>
+
+<section id="admin" class="page"><div class="sectionhead"><h2>⚙ Firebase Setup</h2></div>
+<div class="admin">
+<p style="color:#999;font-size:12px">Paste your Firebase Realtime Database config below. This demo uses Firebase directly from the browser. Never put Telegram bot tokens or private credentials here.</p>
+<textarea id="firebaseConfig" placeholder='{"apiKey":"...","authDomain":"...","databaseURL":"https://...-default-rtdb.firebaseio.com","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+<button class="btn" onclick="connectFirebase()">Connect Firebase</button>
+<div id="fbStatus" style="font-size:12px;color:#888;margin-top:10px">Status: Demo data</div>
+<hr style="border:0;border-top:1px solid #292929;margin:18px 0">
+<p style="font-size:12px;color:#999">Expected Realtime Database paths:</p>
+<pre style="white-space:pre-wrap;color:#aaa;font-size:11px">movies/{id}
+tv/{id}
+genres/{id}
+
+movies example:
+title, poster, rating, year, genre, language,
+country, telegramUrl, description</pre>
+</div></section>
+</main>
+
+<nav><button id="n-home" class="active" onclick="showPage('home')"><span>⌂</span>Home</button><button id="n-search" onclick="showPage('search')"><span>⌕</span>Search</button><button id="n-watchlist" onclick="showPage('watchlist')"><span>♡</span>WatchList</button></nav>
+<div id="toast" class="toast"></div>
 </div>
 
-<div id="app">
-
-  <!-- HOME -->
-  <main id="homePage" class="page active">
-    <div class="container">
-
-      <div class="top">
-        <div class="titleBlock">
-          <h1>Browse Genres</h1>
-          <p>Find something that matches your mood</p>
-        </div>
-        <button class="iconBtn active" aria-label="Movies">🎬</button>
-      </div>
-
-      <div id="genreRow" class="genreRow"></div>
-
-      <section class="section">
-        <div class="sectionHead">
-          <h2>🔥 United States’s Top Movies</h2>
-          <button class="more" onclick="showAll('movies')">›</button>
-        </div>
-        <div id="topMovies" class="movieRow">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-      </section>
-
-      <section class="section tv">
-        <div class="sectionHead">
-          <h2>📺 Trending TV Shows</h2>
-          <button class="more" onclick="showAll('tv')">›</button>
-        </div>
-        <div id="topTV" class="movieRow">
-          <div class="loading"><div class="spinner"></div></div>
-        </div>
-      </section>
-
-    </div>
-  </main>
-
-  <!-- SEARCH -->
-  <main id="searchPage" class="page">
-    <div class="container">
-      <div class="top">
-        <div class="titleBlock">
-          <h1>Search</h1>
-          <p>Find movies and shows from Firebase</p>
-        </div>
-      </div>
-      <input id="searchInput" class="searchBox" placeholder="🔎 Search title, genre, language..." autocomplete="off">
-      <div id="searchFilters" class="filterRow"></div>
-      <div id="searchResults" class="searchResults"></div>
-    </div>
-  </main>
-
-  <!-- WATCHLIST -->
-  <main id="watchlistPage" class="page">
-    <div class="container">
-      <div class="top">
-        <div class="titleBlock">
-          <h1>WatchList</h1>
-          <p>Your saved movies</p>
-        </div>
-      </div>
-      <div id="watchlistResults"></div>
-    </div>
-  </main>
-
-  <!-- DETAIL / PLAYER -->
-  <main id="detailPage" class="page">
-    <div class="detailTop">
-      <div class="breadcrumb">HOME &nbsp;•&nbsp; MOVIE &nbsp;•&nbsp; <b id="crumbTitle">TITLE</b></div>
-      <button class="closeBtn" onclick="closeDetail()">×</button>
-    </div>
-    <div class="detailBody">
-      <div class="detailTitle" id="detailTitle"></div>
-      <div class="detailMeta" id="detailMeta"></div>
-
-      <div class="player" id="player">
-        <div class="playerEmpty">
-          <div><b>Select a title</b>Player will load the licensed video source stored in Firebase.</div>
-        </div>
-      </div>
-
-      <div class="watchActions">
-        <button class="primary" onclick="toggleCurrentWatchlist()">♡ WatchList</button>
-        <button onclick="shareCurrent()">↗ Share</button>
-      </div>
-      <div class="description" id="detailDescription"></div>
-    </div>
-  </main>
-
-  <!-- BOTTOM -->
-  <nav class="bottomNav">
-    <button id="navHome" class="navBtn active" onclick="navigate('home')">
-      <span class="navIcon">⌂</span><span>Home</span>
-    </button>
-    <button id="navSearch" class="navBtn" onclick="navigate('search')">
-      <span class="navIcon">⌕</span><span>Search</span>
-    </button>
-    <button id="navWatch" class="navBtn" onclick="navigate('watchlist')">
-      <span class="navIcon">♡</span><span>WatchList</span>
-    </button>
-  </nav>
-
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="https://telegram.org/js/telegram-widget.js?22"></script>
 <script>
-/* =========================================================
-   1. FIREBASE CONFIG
-   Replace these values with YOUR Firebase Web App config.
-   This page intentionally does NOT use localStorage.
-   ========================================================= */
-const firebaseConfig = {
-  apiKey: "PASTE_YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
-};
+const demoGenres=[
+{id:'action',name:'Action',icon:'💥'},{id:'adventure',name:'Adventure',icon:'🗺️'},
+{id:'comedy',name:'Comedy',icon:'😂'},{id:'drama',name:'Drama',icon:'🎭'},
+{id:'sci-fi',name:'Sci-Fi',icon:'🚀'},{id:'thriller',name:'Thriller',icon:'🔪'}
+];
+const demoMovies=[
+{id:'d1',title:'Demo Movie One',poster:'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=500&q=80',rating:'8.7',year:'2026',genre:'Action',language:'English',country:'USA',description:'Replace this demo item with your licensed movie data in Firebase.',telegramUrl:'https://t.me/mycinehub0/17'},
+{id:'d2',title:'Demo Movie Two',poster:'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=500&q=80',rating:'8.2',year:'2026',genre:'Drama',language:'Hindi',country:'India',description:'Firebase-ready movie card.',telegramUrl:'https://t.me/mycinehub0/17'}
+];
+const demoTv=[{id:'t1',title:'Demo Series',poster:'https://images.unsplash.com/photo-1524985069026-dd778a71c7b4?auto=format&fit=crop&w=500&q=80',rating:'8.5',year:'2026',genre:'Drama',language:'English',country:'USA',description:'Firebase-ready TV show.',telegramUrl:'https://t.me/mycinehub0/17'}];
 
-let db = null;
-let firebaseReady = false;
+let state={genres:demoGenres,movies:demoMovies,tv:demoTv};
+let watchlist=new Set(JSON.parse(sessionStorage.getItem('cr_watchlist')||'[]'));
 
-try{
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.database();
-  firebaseReady = true;
-}catch(e){
-  console.error("Firebase initialization failed:", e);
+function toast(t){let x=document.getElementById('toast');x.textContent=t;x.classList.add('show');setTimeout(()=>x.classList.remove('show'),2200)}
+function showPage(id){
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));let n=document.getElementById('n-'+id);if(n)n.classList.add('active');
+ if(id==='watchlist')renderWatchlist(); if(id==='search')renderSearch(); window.scrollTo(0,0);
 }
-
-/* =========================================================
-   2. FIREBASE DATA
-   Expected Realtime Database structure:
-
-   genres/
-     action: {name:"Action", icon:"✦", theme:"red"}
-     adventure: {name:"Adventure", icon:"✦", theme:"blue"}
-
-   movies/
-     movieId/
-       title
-       poster
-       rating
-       date
-       year
-       genre
-       language
-       country
-       type: "movie"
-       videoUrl
-       videoType: "mp4" | "iframe"
-       description
-       featured: true
-
-   tv/
-     showId/
-       same fields, type:"tv"
-
-   ========================================================= */
-
-let genres = [];
-let movies = [];
-let tvShows = [];
-let current = null;
-let currentFilter = "All";
-let allSearch = [];
-let watchlist = getWatchlistMemory();
-
-/*
-  IMPORTANT:
-  WatchList is kept only in memory for this version.
-  No movie data, Firebase data, or video URL is stored in localStorage.
-  If you want account-based watchlists later, store them under users/{uid}/watchlist
-  with Firebase Authentication.
-*/
-function getWatchlistMemory(){
-  return window.__cineRushWatchlist || (window.__cineRushWatchlist = []);
+function poster(item){
+return `<article class="poster" onclick="openDetail('${esc(item.id)}')"><img loading="lazy" src="${esc(item.poster||'https://via.placeholder.com/500x700/111/fff?text=CineRush')}" onerror="this.src='https://via.placeholder.com/500x700/111/fff?text=CineRush'"><div class="info"><b>${esc(item.title||'Untitled')}</b><div class="meta">★ ${esc(item.rating||'—')} · ${esc(item.year||'—')}</div></div></article>`;
 }
-
-function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
+function render(){
+ document.getElementById('genres').innerHTML=state.genres.map(g=>`<div class="genre" onclick="filterGenre('${esc(g.name)}')"><strong>${esc(g.icon||'🎬')} ${esc(g.name)}</strong><span>Explore titles →</span></div>`).join('');
+ document.getElementById('movies').innerHTML=state.movies.length?state.movies.map(poster).join(''):'<div class="empty">No movies found in Firebase.</div>';
+ document.getElementById('tv').innerHTML=state.tv.length?state.tv.map(poster).join(''):'<div class="empty">No TV shows found in Firebase.</div>';
+ document.getElementById('movieCount').textContent=state.movies.length+' titles';document.getElementById('tvCount').textContent=state.tv.length+' shows';
 }
-
-function movieImage(item){
-  if(item.poster){
-    return `<img src="${escapeHTML(item.poster)}" alt="${escapeHTML(item.title)}" loading="lazy"
-      onerror="this.style.display='none';this.parentElement.querySelector('.posterFallback').style.display='grid'">`;
-  }
-  return "";
-}
-
-function card(item){
-  const saved = getWatchlistMemory().includes(item.id);
-  return `
-    <article class="movieCard">
-      <button style="display:block;width:100%;background:none;border:0;color:inherit;text-align:left"
-              onclick="openDetail('${escapeHTML(item.id)}')">
-        <div class="posterWrap">
-          ${movieImage(item)}
-          <div class="posterFallback" style="${item.poster ? 'display:none':''}">🎬</div>
-          <div class="rating"><span>★</span>${escapeHTML(item.rating || "—")}</div>
-        </div>
-        <div class="movieName">${escapeHTML(item.title || "Untitled")}</div>
-        <div class="movieDate">${escapeHTML(item.date || item.year || "")}</div>
-      </button>
-    </article>`;
-}
-
-function renderGenres(){
-  const box = document.getElementById("genreRow");
-  if(!genres.length){
-    box.innerHTML = `
-      <div class="genre red">
-        <div class="genreIcon">✦</div><h3>Action</h3><div class="genreArrow">›</div>
-      </div>
-      <div class="genre blue">
-        <div class="genreIcon">✦</div><h3>Adventure</h3><div class="genreArrow">›</div>
-      </div>`;
-    return;
-  }
-
-  box.innerHTML = genres.map((g,i)=>`
-    <button class="genre ${escapeHTML(g.theme || (i%3===0?'red':i%3===1?'blue':'purple'))}"
-            onclick="filterGenre('${escapeHTML(g.name || '')}')">
-      <div class="genreIcon">${escapeHTML(g.icon || "✦")}</div>
-      <h3>${escapeHTML(g.name || "Genre")}</h3>
-      <div class="genreArrow">›</div>
-    </button>`).join("");
-}
-
-function renderHome(){
-  const top = [...movies].sort((a,b)=>
-    Number(b.rating || 0)-Number(a.rating || 0)
-  ).slice(0,10);
-
-  const shows = [...tvShows].sort((a,b)=>
-    Number(b.rating || 0)-Number(a.rating || 0)
-  ).slice(0,10);
-
-  document.getElementById("topMovies").innerHTML =
-    top.length ? top.map(card).join("") : emptyRow("No movies found in Firebase.");
-
-  document.getElementById("topTV").innerHTML =
-    shows.length ? shows.map(card).join("") : emptyRow("No TV shows found in Firebase.");
-
-  renderGenres();
-}
-
-function emptyRow(message){
-  return `<div style="padding:45px 0;color:#707078;font-size:14px">${escapeHTML(message)}</div>`;
-}
-
-function filterGenre(genre){
-  navigate("search");
-  currentFilter = genre;
-  document.getElementById("searchInput").value = "";
-  renderSearchFilters();
-  renderSearch();
-}
-
-function renderSearchFilters(){
-  const genresSet = [...new Set(allSearch.map(x=>x.genre).filter(Boolean))];
-  const values = ["All", ...genresSet];
-  document.getElementById("searchFilters").innerHTML = values.map(g=>`
-    <button class="filter ${currentFilter===g?'active':''}"
-            onclick="setSearchFilter('${escapeHTML(g)}')">${escapeHTML(g)}</button>
-  `).join("");
-}
-
-function setSearchFilter(g){
-  currentFilter = g;
-  renderSearchFilters();
-  renderSearch();
-}
-
-function renderSearch(){
-  const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
-  let list = allSearch.filter(item=>{
-    const text = `${item.title||""} ${item.genre||""} ${item.language||""} ${item.year||""}`.toLowerCase();
-    const genreOK = currentFilter==="All" || item.genre===currentFilter;
-    return genreOK && text.includes(q);
-  });
-
-  const box = document.getElementById("searchResults");
-  box.innerHTML = list.length ? list.map(card).join("") :
-    `<div class="empty" style="grid-column:1/-1"><div class="eicon">⌕</div>No titles found.</div>`;
-}
-
 function openDetail(id){
-  const item = allSearch.find(x=>String(x.id)===String(id));
-  if(!item) return;
-
-  current = item;
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("detailPage").classList.add("active");
-  document.body.scrollTop = 0;
-  window.scrollTo(0,0);
-
-  document.getElementById("crumbTitle").textContent = item.title || "TITLE";
-  document.getElementById("detailTitle").textContent = item.title || "Untitled";
-  document.getElementById("detailMeta").textContent =
-    `${item.type==="tv" ? "TV SHOW" : "MOVIE"} • ${item.genre || "Entertainment"}${item.language ? " • "+item.language : ""}${item.year ? " • "+item.year : ""}`;
-
-  document.getElementById("detailDescription").textContent = item.description || "";
-  buildPlayer(item);
+let item=[...state.movies,...state.tv].find(x=>String(x.id)===String(id));if(!item)return;
+document.getElementById('detailContent').innerHTML=`<div class="detail">
+<img class="detailPoster" src="${esc(item.poster||'https://via.placeholder.com/800x1100/111/fff?text=CineRush')}" onerror="this.src='https://via.placeholder.com/800x1100/111/fff?text=CineRush'">
+<h1>${esc(item.title)}</h1><div class="meta">★ ${esc(item.rating||'—')} · ${esc(item.year||'—')} · ${esc(item.country||'')}</div>
+<div class="chips"><span class="chip">${esc(item.genre||'Movie')}</span><span class="chip">${esc(item.language||'')}</span></div>
+<p class="desc">${esc(item.description||'')}</p>
+<div style="display:flex;gap:8px"><button class="btn" onclick="playTelegram('${esc(item.telegramUrl||'')}')">▶ Play</button><button class="btn alt" onclick="toggleWatch('${esc(item.id)}')">${watchlist.has(String(item.id))?'♥ Saved':'♡ Watchlist'}</button></div>
+<div id="detailPlayer"></div></div>`;
+showPage('detail');
 }
-
-function buildPlayer(item){
-  const box = document.getElementById("player");
-  box.innerHTML = "";
-
-  /*
-    The browser must receive a playable, authorized URL.
-    A Telegram Bot token MUST NOT be placed in this HTML.
-    If your licensed Telegram files need a bot/API to generate a
-    playable URL, that part belongs on a secure server.
-  */
-  if(!item.videoUrl){
-    box.innerHTML = `
-      <div class="playerEmpty">
-        <div><b>Video source not configured</b>
-        Add an authorized videoUrl in Firebase.</div>
-      </div>`;
-    return;
-  }
-
-  if(item.videoType==="iframe"){
-    box.innerHTML =
-      `<iframe src="${escapeHTML(item.videoUrl)}"
-       allow="autoplay; fullscreen; picture-in-picture"
-       allowfullscreen></iframe>`;
-  }else{
-    box.innerHTML =
-      `<video src="${escapeHTML(item.videoUrl)}"
-       controls playsinline preload="metadata"></video>`;
-  }
+function playTelegram(url){if(!url){toast('Telegram post link not added');return}showPage('detail');document.getElementById('detailPlayer').innerHTML=`<div class="section"><div class="player"><div class="scan"><div class="orb"></div><div class="status">Loading Telegram player…</div></div></div><div class="tgbox"><div id="detailTg" class="widget"></div></div></div>`;embedTelegram(url,'detailTg')}
+function loadTelegram(){embedTelegram(document.getElementById('tgUrl').value.trim(),'tgWidget')}
+function embedTelegram(url,target){
+let m=url.match(/^https?:\/\/t\.me\/([A-Za-z0-9_]+)\/(\d+)(?:\?.*)?$/);
+if(!m){document.getElementById(target).innerHTML='<div class="empty">Use a public Telegram post URL like <b>https://t.me/channel/17</b>.</div>';return}
+document.getElementById(target).innerHTML='';
+let s=document.createElement('script');s.async=true;s.src='https://telegram.org/js/telegram-widget.js?22';s.dataset.telegramPost=m[1]+'/'+m[2];s.dataset.width='100%';s.dataset.dark='1';s.dataset.darkMode='1';document.getElementById(target).appendChild(s);
 }
+function toggleWatch(id){id=String(id);watchlist.has(id)?watchlist.delete(id):watchlist.add(id);sessionStorage.setItem('cr_watchlist',JSON.stringify([...watchlist]));toast(watchlist.has(id)?'Added to WatchList':'Removed');openDetail(id)}
+function renderWatchlist(){let items=[...state.movies,...state.tv].filter(x=>watchlist.has(String(x.id)));document.getElementById('watchlistItems').innerHTML=items.length?'<div class="row" style="flex-wrap:wrap;overflow:visible">'+items.map(poster).join('')+'</div>':'<div class="empty">Your WatchList is empty.</div>'}
+function renderSearch(){let q=(document.getElementById('q')?.value||'').toLowerCase();let items=[...state.movies,...state.tv].filter(x=>[x.title,x.genre,x.language,x.country].join(' ').toLowerCase().includes(q));document.getElementById('results').innerHTML=items.length?items.map(poster).join(''):'<div class="empty" style="width:100%">No results.</div>'}
+function filterGenre(g){document.getElementById('q').value=g;showPage('search');renderSearch()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-function closeDetail(){
-  document.getElementById("player").innerHTML = "";
-  current = null;
-  navigate("home");
+function connectFirebase(){
+try{
+ const cfg=JSON.parse(document.getElementById('firebaseConfig').value);
+ if(!firebase.apps.length)firebase.initializeApp(cfg); else firebase.app();
+ const db=firebase.database();
+ document.getElementById('fbStatus').textContent='Status: Connected — listening to Firebase';
+ db.ref('genres').on('value',s=>{let v=s.val();if(v)state.genres=Object.entries(v).map(([id,x])=>({...x,id}));render()});
+ db.ref('movies').on('value',s=>{let v=s.val();state.movies=v?Object.entries(v).map(([id,x])=>({...x,id})):[];render()});
+ db.ref('tv').on('value',s=>{let v=s.val();state.tv=v?Object.entries(v).map(([id,x])=>({...x,id})):[];render()});
+ toast('Firebase connected');
+}catch(e){document.getElementById('fbStatus').textContent='Status: '+e.message;toast('Firebase config invalid')}
 }
-
-function toggleCurrentWatchlist(){
-  if(!current) return;
-  const list = getWatchlistMemory();
-  const index = list.indexOf(current.id);
-  if(index>=0) list.splice(index,1);
-  else list.push(current.id);
-  window.__cineRushWatchlist = list;
-  renderWatchlist();
-}
-
-function renderWatchlist(){
-  const list = allSearch.filter(x=>getWatchlistMemory().includes(x.id));
-  const box = document.getElementById("watchlistResults");
-  box.innerHTML = list.length
-    ? `<div class="movieRow" style="margin-right:0">${list.map(card).join("")}</div>`
-    : `<div class="empty"><div class="eicon">♡</div><b style="color:#ddd;display:block;margin-bottom:7px">Your WatchList is empty</b>Save movies to see them here.</div>`;
-}
-
-async function shareCurrent(){
-  if(!current) return;
-  const url = location.href.split("#")[0] + "#movie=" + encodeURIComponent(current.id);
-  if(navigator.share){
-    try{ await navigator.share({title:current.title,text:"Watch on CineRush",url}); }catch(e){}
-  }else{
-    try{
-      await navigator.clipboard.writeText(url);
-      alert("Link copied.");
-    }catch(e){
-      alert(url);
-    }
-  }
-}
-
-function showAll(type){
-  navigate("search");
-  currentFilter = "All";
-  document.getElementById("searchInput").value = "";
-  renderSearchFilters();
-  const list = type==="tv" ? tvShows : movies;
-  document.getElementById("searchResults").innerHTML =
-    list.length ? list.map(card).join("") :
-    `<div class="empty" style="grid-column:1/-1">No titles found.</div>`;
-}
-
-function navigate(page){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(page+"Page").classList.add("active");
-
-  document.getElementById("navHome").classList.toggle("active",page==="home");
-  document.getElementById("navSearch").classList.toggle("active",page==="search");
-  document.getElementById("navWatch").classList.toggle("active",page==="watchlist");
-
-  if(page==="search"){
-    renderSearchFilters();
-    renderSearch();
-  }
-  if(page==="watchlist") renderWatchlist();
-  window.scrollTo(0,0);
-}
-
-document.getElementById("searchInput").addEventListener("input",renderSearch);
-
-/* =========================================================
-   3. FIREBASE REALTIME LISTENERS
-   ========================================================= */
-function loadFirebase(){
-  if(!firebaseReady){
-    showFirebaseError("Firebase config is missing or invalid.");
-    return;
-  }
-
-  db.ref("genres").on("value",snap=>{
-    const val = snap.val() || {};
-    genres = Object.entries(val).map(([id,x])=>({...x,id}));
-    renderGenres();
-  },showFirebaseError);
-
-  db.ref("movies").on("value",snap=>{
-    const val = snap.val() || {};
-    movies = Object.entries(val).map(([id,x])=>({...x,id,type:"movie"}));
-    rebuildSearch();
-    renderHome();
-  },showFirebaseError);
-
-  db.ref("tv").on("value",snap=>{
-    const val = snap.val() || {};
-    tvShows = Object.entries(val).map(([id,x])=>({...x,id,type:"tv"}));
-    rebuildSearch();
-    renderHome();
-  },showFirebaseError);
-}
-
-function rebuildSearch(){
-  allSearch = [...movies,...tvShows];
-  renderSearchFilters();
-  renderSearch();
-  renderWatchlist();
-}
-
-function showFirebaseError(error){
-  console.error(error);
-  document.getElementById("topMovies").innerHTML =
-    `<div style="padding:35px 0;color:#ff7378">Firebase connection error. Check your Firebase config and Realtime Database rules.</div>`;
-}
-
-/* =========================================================
-   4. START
-   ========================================================= */
-window.addEventListener("load",()=>{
-  setTimeout(()=>{
-    document.getElementById("intro").classList.add("hide");
-    document.getElementById("app").style.opacity="1";
-  },1700);
-
-  loadFirebase();
-});
+render();
+// Auto-load the supplied public Telegram post in the homepage player.
+setTimeout(()=>loadTelegram(),250);
 </script>
 </body>
 </html>
